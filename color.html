@@ -1,0 +1,90 @@
+<!doctype html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>Spantree Phonebooth Lights - Color test</title>
+
+    <link rel="stylesheet" type="text/css" href="spectrum.css">
+    <script type="text/javascript" src="jquery.js"></script>
+    <script type="text/javascript" src="spectrum.js"></script>
+	
+<script type="text/javascript">
+
+    $(function() {
+
+		var r = 255;
+		var g = 255;
+		var b = 255;
+
+		$(".basic").spectrum({
+			showButtons: false,
+			move: function(color)
+			{
+				//alert(color);
+				rgb = color.toRgb();
+				r = rgb.r;
+				g = rgb.g;
+				b = rgb.b;
+				writeFrame(0,0,0);
+				writeFrame(0,0,0);
+				writeFrame(r,g,b);
+				console.log("r "+r+" g "+g+" b "+b);
+			}
+		});
+
+
+
+        // Set all pixels to a given color
+				function writeFrame(red, green, blue) 
+				{
+            var leds = 60;
+            var packet = new Uint8ClampedArray(4 + leds * 3);
+
+            if (socket.readyState != 1 /* OPEN */) {
+                // The server connection isn't open. Nothing to do.
+								return;
+            }
+
+            if (socket.bufferedAmount > packet.length) {
+                // The network is lagging, and we still haven't sent the previous frame.
+                // Don't flood the network, it will just make us laggy.
+                // If fcserver is running on the same computer, it should always be able
+                // to keep up with the frames we send, so we shouldn't reach this point.
+                return;
+            }
+
+            // Dest position in our packet. Start right after the header.
+            var dest = 4;
+
+            // Sample the center pixel of each LED
+            for (var led = 0; led < leds; led++) {
+                packet[dest++] = red;
+                packet[dest++] = green;
+                packet[dest++] = blue;
+            }
+            socket.send(packet.buffer);
+        }
+
+        // Connect to a Fadecandy server running on the same computer, on the default port
+        //var socket = new WebSocket('ws://localhost:7890');
+        var socket = new WebSocket('ws://10.0.1.23:7890');
+
+        // Put some connection status text in the corner of the screen
+        $('#connectionStatus').text('Connecting to fcserver...');
+        socket.onclose = function(event) {
+            $('#connectionStatus').text('Not connected to fcserver');
+        }
+        socket.onopen = function(event) {
+            $('#connectionStatus').text('Connected');
+        }
+
+    })
+	</script>
+	</head>
+<body>
+	<input type='text' class='basic' value='red' />
+  <div id="connectionStatus"></div>
+</body>
+
+
+</html>
